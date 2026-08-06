@@ -1,0 +1,117 @@
+// Helpdesk — Entity Relationship Diagram
+
+Project Helpdesk {
+  database_type: 'PostgreSQL'
+  Note: 'Ticket tracking system. Users report problems, Agents resolve them.'
+}
+
+// ENUMS
+
+Enum role {
+  User
+  Agent
+}
+
+Enum ticket_status {
+  New
+  InProgress
+  Resolved
+  Closed
+  Rejected
+}
+
+Enum priority {
+  Low
+  Medium
+  High
+  Critical
+}
+
+// TABLES
+
+Table Users {
+  Id            int          [pk, increment]
+  Email         varchar(256) [not null, unique]
+  PasswordHash  varchar(512) [not null, note: 'hashed by ASP.NET Core Identity']
+  FullName      varchar(200) [not null]
+  Role          role         [not null, default: 'User']
+  CreatedAt     timestamptz  [not null, default: `now()`]
+
+  Indexes {
+    Email [unique, name: 'ix_users_email']
+  }
+
+}
+
+Table Categories {
+  Id    int          [pk, increment]
+  Name  varchar(100) [not null, unique]
+
+}
+
+Table Tickets {
+  Id               int           [pk, increment]
+  Title            varchar(200)  [not null]
+  Description      varchar(2000) [not null]
+  Status           ticket_status [not null, default: 'New']
+  Priority         priority      [not null, default: 'Medium']
+  CategoryId       int           [not null, ref: > Categories.Id]
+  AuthorId         int           [not null, ref: > Users.Id, note: 'who reported it']
+  AssignedAgentId  int           [null,     ref: > Users.Id, note: 'NULL until an agent picks it up']
+  CreatedAt        timestamptz   [not null, default: `now()`]
+  UpdatedAt        timestamptz   [not null, default: `now()`]
+  ClosedAt         timestamptz   [null]
+
+  Indexes {
+    Status                  [name: 'ix_tickets_status']
+    Priority                [name: 'ix_tickets_priority']
+    CategoryId              [name: 'ix_tickets_category']
+    AuthorId                [name: 'ix_tickets_author']
+    AssignedAgentId         [name: 'ix_tickets_assigned_agent']
+    CreatedAt               [name: 'ix_tickets_created_at']
+    (AuthorId, CreatedAt)   [name: 'ix_tickets_author_created', note: 'covers the User list query: own tickets, newest first']
+  }
+
+}
+
+Table Comments {
+  Id         int           [pk, increment]
+  TicketId   int           [not null, ref: > Tickets.Id]
+  AuthorId   int           [not null, ref: > Users.Id]
+  Text       varchar(2000) [not null]
+  CreatedAt  timestamptz   [not null, default: `now()`]
+
+  Indexes {
+    (TicketId, CreatedAt) [name: 'ix_comments_ticket_created', note: 'comment thread, oldest first']
+  }
+}
+
+Table TicketHistory {
+  Id           int           [pk, increment]
+  TicketId     int           [not null, ref: > Tickets.Id]
+  ChangedById  int           [not null, ref: > Users.Id]
+  FromStatus   ticket_status [not null]
+  ToStatus     ticket_status [not null]
+  ChangedAt    timestamptz   [not null, default: `now()`]
+
+  Indexes {
+    (TicketId, ChangedAt) [name: 'ix_history_ticket_changed']
+  }
+
+}
+
+// TABLE GROUPS
+
+TableGroup Identity {
+  Users
+}
+
+TableGroup Core {
+  Tickets
+  Categories
+}
+
+TableGroup Activity {
+  Comments
+  TicketHistory
+}
