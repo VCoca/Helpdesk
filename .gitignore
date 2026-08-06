@@ -1,0 +1,84 @@
+# ---------------------------------------------------------------
+# SECRETS - keep at the top so it is the first thing you check.
+# Note: adding a file here does NOT remove it from history if it
+# was already committed. Check before you commit, not after.
+# ---------------------------------------------------------------
+.env
+.env.local
+.env.*.local
+*.pfx
+*.p12
+appsettings.Development.json
+appsettings.Local.json
+secrets.json
+
+# ---------------------------------------------------------------
+# .NET
+# ---------------------------------------------------------------
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Bb]uild/
+[Ll]og/
+[Ll]ogs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.cache
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Test results / coverage
+[Tt]est[Rr]esult*/
+TestResults/
+coverage*.json
+coverage*.xml
+coverage*.info
+*.coverage
+*.trx
+
+# ---------------------------------------------------------------
+# Node / React / Vite
+# ---------------------------------------------------------------
+node_modules/
+client/dist/
+client/dist-ssr/
+dist/
+.vite/
+*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.eslintcache
+
+# ---------------------------------------------------------------
+# IDEs and editors
+# ---------------------------------------------------------------
+.vs/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+.idea/
+*.swp
+*.swo
+
+# ---------------------------------------------------------------
+# OS
+# ---------------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------------------------------------------------------------
+# NOT ignored - these are deliverables and must be committed:
+#   src/Helpdesk.Infrastructure/Migrations/   EF Core migrations
+#   .env.example                              placeholder config
+#   docs/erd.png                              the ERD
+#   docker-compose*.yml
+# ---------------------------------------------------------------
