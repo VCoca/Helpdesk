@@ -30,17 +30,33 @@ Enum priority {
 // TABLES
 
 Table Users {
-  Id            int          [pk, increment]
-  Email         varchar(256) [not null, unique]
-  PasswordHash  varchar(512) [not null, note: 'hashed by ASP.NET Core Identity']
-  FullName      varchar(200) [not null]
-  Role          role         [not null, default: 'User']
-  CreatedAt     timestamptz  [not null, default: `now()`]
+  // inherited from IdentityUser<int>
+  Id                    int          [pk, increment, note: 'inherited — int, not the default GUID string']
+  UserName              varchar(256) [null, note: 'inherited — set it equal to Email on register']
+  NormalizedUserName    varchar(256) [null, note: 'inherited — uppercased, this is what lookups use']
+  Email                 varchar(256) [null, note: 'inherited — login identifier']
+  NormalizedEmail       varchar(256) [null, note: 'inherited']
+  EmailConfirmed        boolean      [not null, default: false, note: 'inherited']
+  PasswordHash          text         [null, note: 'inherited — hashed by Identity']
+  SecurityStamp         text         [null, note: 'inherited — invalidates tokens when credentials change']
+  ConcurrencyStamp      text         [null, note: 'inherited — optimistic concurrency']
+  PhoneNumber           text         [null, note: 'inherited — unused here']
+  PhoneNumberConfirmed  boolean      [not null, default: false, note: 'inherited — unused here']
+  TwoFactorEnabled      boolean      [not null, default: false, note: 'inherited — unused here']
+  LockoutEnd            timestamptz  [null, note: 'inherited — unused here']
+  LockoutEnabled        boolean      [not null, default: true, note: 'inherited — unused here']
+  AccessFailedCount     int          [not null, default: 0, note: 'inherited — unused here']
+
+  // additions on AppUser
+  FullName              varchar(200) [not null]
+  Role                  role         [not null, default: 'User']
+  CreatedAt             timestamptz  [not null, default: `now()`]
 
   Indexes {
-    Email [unique, name: 'ix_users_email']
+    NormalizedUserName [unique, name: 'UserNameIndex', note: 'created by Identity']
+    NormalizedEmail    [name: 'EmailIndex', note: 'created by Identity']
+    Role               [name: 'ix_users_role']
   }
-
 }
 
 Table Categories {
