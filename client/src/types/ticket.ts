@@ -11,3 +11,16 @@ export interface TicketListItem {
   assignedAgentName: string | null
   createdAt: string
 }
+
+// What POST /api/tickets and GET /api/tickets/{id} return: the list fields plus
+// the ones only the detail endpoint sends.
+export interface TicketDetail extends TicketListItem {
+  description: string
+  updatedAt: string
+  closedAt: string | null
+}
+
+export interface Category {
+  id: number
+  name: string
+}

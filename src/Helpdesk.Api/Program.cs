@@ -15,6 +15,8 @@ builder.Services.AddControllers();
 
 builder.Services.AddScoped<ITicketService, TicketService>();
 
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+
 
 builder.Services.AddDbContext<HelpdeskDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
