@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import { apiGet } from '../api/apiGet'
+import { Link } from 'react-router-dom'
+import { apiGet } from '../api/client'
 import type { TicketListItem } from '../types/ticket'
 
 function TicketsPage() {
@@ -20,12 +21,23 @@ function TicketsPage() {
         <div>
             <h1>Tickets</h1>
 
-            {data.map((ticket) => (
-                <div key={ticket.id}>
-                    <h2>{ticket.title}</h2>
-                    <p>{ticket.status}</p>
-                </div>
-            ))}
+            <Link to="/tickets/new">New ticket</Link>
+
+            {data.length === 0 ? (
+                <p>No tickets yet.</p>
+            ) : (
+                data.map((ticket) => (
+                    <div key={ticket.id}>
+                        <p>-------------------</p>
+                        <h2>
+                            <Link to={`/tickets/${ticket.id}`}>{ticket.title}</Link>
+                        </h2>
+                        <p>{ticket.status}</p>
+                        <p>{ticket.categoryName}</p>
+                        
+                    </div>
+                ))
+            )}
         </div>
     )
 }
