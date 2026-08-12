@@ -75,6 +75,10 @@ pnpm-debug.log*
 Thumbs.db
 desktop.ini
 
+
+*.Backup.tmp
+*.csproj.bak
+
 # ---------------------------------------------------------------
 # NOT ignored - these are deliverables and must be committed:
 #   src/Helpdesk.Infrastructure/Migrations/   EF Core migrations
