@@ -1,6 +1,11 @@
+using FluentValidation;
+using FluentValidation.AspNetCore;
+using Helpdesk.Api.Dtos;
+using Helpdesk.Domain.Entities;
 using Helpdesk.Infrastructure;
 using Helpdesk.Infrastructure.Services;
 using Helpdesk.Infrastructure.Services.Interfaces;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using System.Text.Json.Serialization;
@@ -33,6 +38,9 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddControllers()
     .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<CreateTicketDtoValidator>();
 
 
 var app = builder.Build();
