@@ -19,6 +19,17 @@ namespace Helpdesk.Infrastructure.Configurations
             b.HasIndex(c => c.Name)
                 .IsUnique()
                 .HasDatabaseName("ix_categories_name");
+
+            // Categories are fixed reference data, not test data: they need no
+            // hashing and no ordering, so they belong in the migration itself
+            // rather than in DbInitializer. Ids are explicit because HasData
+            // requires a stable key to diff against.
+            b.HasData(
+                new Category { Id = 1, Name = "Hardware" },
+                new Category { Id = 2, Name = "Software" },
+                new Category { Id = 3, Name = "Network" },
+                new Category { Id = 4, Name = "Access" },
+                new Category { Id = 5, Name = "Other" });
         }
     }
 }

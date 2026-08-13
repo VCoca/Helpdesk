@@ -1,6 +1,7 @@
 using Helpdesk.Api.Dtos;
 using Helpdesk.Infrastructure.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Helpdesk.Api.Controllers
 {
@@ -8,8 +9,6 @@ namespace Helpdesk.Api.Controllers
     [Route("api/tickets")]
     public class TicketsController : ControllerBase
     {
-        private const int TemporaryAuthorId = 1;
-
         private readonly ITicketService _tickets;
 
         public TicketsController(ITicketService tickets) => _tickets = tickets;
@@ -49,12 +48,14 @@ namespace Helpdesk.Api.Controllers
                 return ValidationProblem(ModelState);
             }
 
+            int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int userId);
+
             var ticket = await _tickets.CreateAsync(
                 dto.Title,
                 dto.Description,
                 dto.Priority,
                 dto.CategoryId,
-                TemporaryAuthorId,
+                userId,
                 ct);
 
             return CreatedAtRoute(
