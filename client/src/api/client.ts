@@ -1,9 +1,7 @@
+import { getToken } from './auth'
+
 const BASE = import.meta.env.VITE_API_BASE_URL as string | undefined
 
-// Checked per request rather than at module load. Throwing at module scope kills
-// the whole import graph, so a missing variable would white-screen every page —
-// including the ones that never call the API. This way it surfaces as a normal
-// query error on the screens that actually fetch.
 function baseUrl(): string {
   if (!BASE) {
     throw new Error(
@@ -13,9 +11,6 @@ function baseUrl(): string {
   return BASE
 }
 
-// ASP.NET Core answers 400/404 with a ProblemDetails body. Reading the message
-// out of it is the difference between showing the user "Category does not
-// exist." and showing them "400 Bad Request".
 interface ProblemDetails {
   title?: string
   detail?: string
@@ -41,8 +36,15 @@ async function toError(res: Response): Promise<Error> {
   )
 }
 
+// Every protected endpoint wants the same header. Omitted entirely when there
+// is no token, so /api/auth/login is not sent a stale "Bearer null".
+function authHeaders(): Record<string, string> {
+  const token = getToken()
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
 export async function apiGet<T>(path: string): Promise<T> {
-  const res = await fetch(`${baseUrl()}${path}`)
+  const res = await fetch(`${baseUrl()}${path}`, { headers: authHeaders() })
   if (!res.ok) throw await toError(res)
   return res.json() as Promise<T>
 }
@@ -50,7 +52,7 @@ export async function apiGet<T>(path: string): Promise<T> {
 export async function apiPost<TBody, TResult>(path: string, body: TBody): Promise<TResult> {
   const res = await fetch(`${baseUrl()}${path}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify(body),
   })
   if (!res.ok) throw await toError(res)

@@ -1,5 +1,6 @@
 using Helpdesk.Api.Dtos;
 using Helpdesk.Infrastructure.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Helpdesk.Api.Controllers
@@ -12,6 +13,7 @@ namespace Helpdesk.Api.Controllers
 
         public AuthController(IAuthService auth) => _auth = auth;
 
+        [AllowAnonymous]
         [HttpPost("register")]
         [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -29,11 +31,10 @@ namespace Helpdesk.Api.Controllers
                 return ValidationProblem(ModelState);
             }
 
-            // 201 without a Location header: a user was created, but there is no
-            // endpoint that serves one, so there is nothing to point at.
             return StatusCode(StatusCodes.Status201Created, result.Auth.ToAuthResponseDto());
         }
 
+        [AllowAnonymous]
         [HttpPost("login")]
         [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -43,8 +44,6 @@ namespace Helpdesk.Api.Controllers
         {
             var auth = await _auth.LoginAsync(dto.Email, dto.Password, ct);
 
-            // One message for both "no such account" and "wrong password", so the
-            // response cannot be used to work out which emails are registered.
             if (auth is null)
                 return Problem(
                     detail: "Invalid email or password.",
