@@ -6,9 +6,9 @@ namespace Helpdesk.Infrastructure.Services.Interfaces
 
     public interface ITicketService
     {
-        Task<IReadOnlyList<Ticket>> GetAllAsync(CancellationToken ct = default);
+        Task<IReadOnlyList<Ticket>> GetAllAsync(int currentUserId, bool isAgent, CancellationToken ct = default);
 
-        Task<Ticket?> GetByIdAsync(int id, CancellationToken ct = default);
+        Task<Ticket?> GetByIdAsync(int id, int currentUserId, bool isAgent, CancellationToken ct = default);
 
         Task<Ticket> CreateAsync(
             string title,

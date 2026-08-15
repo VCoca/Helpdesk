@@ -35,8 +35,6 @@ function NewTicketPage() {
     mutationFn: (values: CreateTicketInput) =>
       apiPost<CreateTicketInput, TicketDetail>('/api/tickets', values),
     onSuccess: (ticket) => {
-      // The cached list no longer matches the server. Invalidating refetches it
-      // rather than trying to splice the new ticket in by hand.
       queryClient.invalidateQueries({ queryKey: ['tickets'] })
       navigate(`/tickets/${ticket.id}`)
     },

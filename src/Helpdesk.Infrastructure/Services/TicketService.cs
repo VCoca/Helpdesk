@@ -11,25 +11,31 @@ namespace Helpdesk.Infrastructure.Services
 
         public TicketService(HelpdeskDbContext db) => _db = db;
 
-        public async Task<IReadOnlyList<Ticket>> GetAllAsync(CancellationToken ct = default)
-        {
-            return await _db.Tickets
+        private IQueryable<Ticket> WithRelated() =>
+            _db.Tickets
                 .Include(t => t.Category)
                 .Include(t => t.Author)
                 .Include(t => t.AssignedAgent)
-                .AsNoTracking()
-                .OrderByDescending(t => t.CreatedAt)
-                .ToListAsync(ct);
+                .AsNoTracking();
+
+        public async Task<IReadOnlyList<Ticket>> GetAllAsync(int currentUserId, bool isAgent, CancellationToken ct = default)
+        {
+            var query = WithRelated();
+
+            if (!isAgent)
+                query = query.Where(t => t.AuthorId == currentUserId);
+
+            return await query.OrderByDescending(t => t.CreatedAt).ToListAsync(ct);
         }
 
-        public async Task<Ticket?> GetByIdAsync(int id, CancellationToken ct = default)
+        public async Task<Ticket?> GetByIdAsync(int id, int currentUserId, bool isAgent, CancellationToken ct = default)
         {
-            return await _db.Tickets
-                .Include(t => t.Category)
-                .Include(t => t.Author)
-                .Include(t => t.AssignedAgent)
-                .AsNoTracking()
-                .FirstOrDefaultAsync(t => t.Id == id, ct);
+            var query = WithRelated();
+
+            if (!isAgent)
+                query = query.Where(t => t.AuthorId == currentUserId);
+
+            return await query.FirstOrDefaultAsync(t => t.Id == id, ct);
         }
 
         public async Task<bool> CategoryExistsAsync(int categoryId, CancellationToken ct = default)
@@ -53,7 +59,6 @@ namespace Helpdesk.Infrastructure.Services
                 CategoryId = categoryId,
                 AuthorId = authorId,
 
-                // Set on the server
                 Status = TicketStatus.New,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
@@ -62,7 +67,7 @@ namespace Helpdesk.Infrastructure.Services
             _db.Tickets.Add(ticket);
             await _db.SaveChangesAsync(ct);
 
-            return await GetByIdAsync(ticket.Id, ct) ?? ticket;
+            return await WithRelated().FirstOrDefaultAsync(t => t.Id == ticket.Id, ct) ?? ticket;
         }
     }
 }
