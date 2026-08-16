@@ -1,28 +1,20 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 import { apiPost } from '../api/client'
-import { setToken } from '../api/auth'
+import { saveAuth } from '../api/auth'
+import type { AuthResponse } from '../types/auth'
 
-interface AuthResponse {
-  token: string
-  expiresAtUtc: string
-  userId: number
-  email: string
-  fullName: string
-  role: 'User' | 'Agent'
-}
-
-// Deliberately bare: plain useState rather than React Hook Form + Zod, and no
-// redirect-back-to-where-you-were. Enough to obtain a token; the real login
-// screen is a separate task.
 function LoginPage() {
   const [email, setEmail] = useState('jelena.popovic@helpdesk.local')
   const [password, setPassword] = useState('Password123!')
 
   const navigate = useNavigate()
+  const location = useLocation()
   const queryClient = useQueryClient()
+
+  const from = (location.state as { from?: { pathname: string } } | null)?.from?.pathname
 
   const login = useMutation({
     mutationFn: () => apiPost<{ email: string; password: string }, AuthResponse>(
@@ -30,13 +22,11 @@ function LoginPage() {
       { email, password },
     ),
     onSuccess: (auth) => {
-      setToken(auth.token)
+      saveAuth(auth)
 
-      // Drop anything cached as the previous identity, including the 401s from
-      // before logging in.
       queryClient.clear()
 
-      navigate('/tickets')
+      navigate(from ?? '/tickets', { replace: true })
     },
   })
 
@@ -90,6 +80,10 @@ function LoginPage() {
         jelena.popovic@helpdesk.local (User) — sees 7 tickets
         <br />
         ana.kovac@helpdesk.local (Agent) — sees all 25
+      </p>
+
+      <p className="mt-2 text-sm">
+        No account? <Link to="/register" className="underline">Register</Link>
       </p>
     </div>
   )
