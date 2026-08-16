@@ -1,4 +1,4 @@
-import { getToken } from './auth'
+import { clearAuth, getToken } from './auth'
 
 const BASE = import.meta.env.VITE_API_BASE_URL as string | undefined
 
@@ -36,25 +36,39 @@ async function toError(res: Response): Promise<Error> {
   )
 }
 
-// Every protected endpoint wants the same header. Omitted entirely when there
-// is no token, so /api/auth/login is not sent a stale "Bearer null".
-function authHeaders(): Record<string, string> {
+function authHeaders(path: string): Record<string, string> {
+  if (path.startsWith('/api/auth/')) return {}
+
   const token = getToken()
   return token ? { Authorization: `Bearer ${token}` } : {}
 }
 
-export async function apiGet<T>(path: string): Promise<T> {
-  const res = await fetch(`${baseUrl()}${path}`, { headers: authHeaders() })
-  if (!res.ok) throw await toError(res)
+async function request<T>(path: string, init: RequestInit, extraHeaders: Record<string, string> = {}): Promise<T> {
+  const auth = authHeaders(path)
+  const sentToken = 'Authorization' in auth
+
+  const res = await fetch(`${baseUrl()}${path}`, {
+    ...init,
+    headers: { ...extraHeaders, ...auth },
+  })
+
+  if (!res.ok) {
+    if (res.status === 401 && sentToken) clearAuth()
+
+    throw await toError(res)
+  }
+
   return res.json() as Promise<T>
 }
 
-export async function apiPost<TBody, TResult>(path: string, body: TBody): Promise<TResult> {
-  const res = await fetch(`${baseUrl()}${path}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...authHeaders() },
-    body: JSON.stringify(body),
-  })
-  if (!res.ok) throw await toError(res)
-  return res.json() as Promise<TResult>
+export function apiGet<T>(path: string): Promise<T> {
+  return request<T>(path, { method: 'GET' })
+}
+
+export function apiPost<TBody, TResult>(path: string, body: TBody): Promise<TResult> {
+  return request<TResult>(
+    path,
+    { method: 'POST', body: JSON.stringify(body) },
+    { 'Content-Type': 'application/json' },
+  )
 }
